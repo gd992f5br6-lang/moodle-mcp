@@ -10,7 +10,7 @@ Companion to [`claude-moodle-dev`](https://github.com/SaadRahman01/claude-moodle
 
 ## What you get
 
-Ten MCP tools, hardened to survive site redesigns:
+Eleven MCP tools, hardened to survive site redesigns:
 
 | Tool | Purpose |
 |------|---------|
@@ -24,6 +24,7 @@ Ten MCP tools, hardened to survive site redesigns:
 | `search_tracker(query, limit=5, affects_version?, fix_version?)` | Issue search against `tracker.moodle.org` (Jira), now with version filters. |
 | `list_ws_functions()` | List Moodle Web Services functions available to the configured instance token. Requires `MOODLE_URL` + `MOODLE_TOKEN`. |
 | `call_ws_function(function, args)` | Invoke a Moodle WS function against a real instance. SSRF-guarded, function-name allowlisted, refuses private/loopback hosts unless explicitly overridden. |
+| `get_homework(days_ahead=14, days_back=14, include_done=false)` | Open homework from Moodle (assignment/quiz deadlines on the calendar timeline) and WebUntis (class-book homework), merged into one list by due date, overdue first. Uses whichever source is configured. |
 
 Plus MCP **resources** (`moodle://docs/apis/...` for one-click page reads), **prompts** (`moodle-plugin-skeleton`, `moodle-capability-review`, `moodle-hooks-migration`, `explain-capability`, `find-endpoint`, `explain-plugin-type`, `xmldb-upgrade`, `diagnose-mdl`), **tool annotations** (`readOnlyHint`, `destructiveHint`) for client safety, and **progress notifications** during multi-fetch searches.
 
@@ -36,6 +37,11 @@ No API keys required for docs. Pulls the public sitemap, caches it on disk (`~/.
 | `MOODLE_URL` | Base URL of a real Moodle instance (https). Enables WS tools. |
 | `MOODLE_TOKEN` | WS token for that instance. |
 | `MOODLE_WS_ALLOW_INSECURE` | Set to `1` to permit `http://` or private/loopback hosts (local dev only). |
+| `UNTIS_SERVER` | WebUntis host of your school, e.g. `myschool.webuntis.com`. Enables Untis homework in `get_homework`. |
+| `UNTIS_SCHOOL` | WebUntis school login name, e.g. `myschool`. |
+| `UNTIS_USER` | Your WebUntis username. |
+| `UNTIS_SECRET` | The key behind the Untis Mobile QR code: WebUntis → Profil → Freigaben → "Zugriff über Untis Mobile" → Anzeigen. Works for SSO accounts too; no password needed. |
+| `HOMEWORK_TZ` | Timezone for due dates (default `Europe/Berlin`). |
 | `MOODLE_DOCS_ALGOLIA_APP_ID` | Algolia DocSearch app ID. Enables higher-precision recall over sitemap BM25. |
 | `MOODLE_DOCS_ALGOLIA_API_KEY` | Algolia public search key. |
 | `MOODLE_DOCS_ALGOLIA_INDEX` | Index name (default: `moodledev`). |
@@ -45,6 +51,7 @@ No API keys required for docs. Pulls the public sitemap, caches it on disk (`~/.
 ```bash
 moodle-mcp --version
 moodle-mcp --check        # diagnostic: fetch sitemap + sample page, exit
+moodle-mcp --homework     # print open homework from Moodle + WebUntis, exit
 moodle-mcp --log-level DEBUG
 ```
 

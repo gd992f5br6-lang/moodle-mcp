@@ -29,6 +29,7 @@ from .tools import (
     tool_call_ws_function,
     tool_capability_docs,
     tool_fetch_page,
+    tool_get_homework,
     tool_hooks_listeners,
     tool_list_ws_functions,
     tool_plugin_types,
@@ -260,6 +261,34 @@ TOOLS: list[Tool] = [
         },
         read_only=False,
         destructive=True,
+    ),
+    _make_tool(
+        "get_homework",
+        (
+            "Collect open homework from Moodle (assignment/quiz deadlines from the "
+            "calendar timeline) and WebUntis (homework entered in the class book), "
+            "merged into one list sorted by due date, with overdue items first. "
+            "Each source is used when its env vars are set: MOODLE_URL + "
+            "MOODLE_TOKEN, and UNTIS_SERVER + UNTIS_SCHOOL + UNTIS_USER + "
+            "UNTIS_SECRET. Read-only."
+        ),
+        {
+            "type": "object",
+            "properties": {
+                "days_ahead": {
+                    "type": "integer", "minimum": 1, "maximum": 60, "default": 14,
+                    "description": "Include homework due up to this many days from today.",
+                },
+                "days_back": {
+                    "type": "integer", "minimum": 0, "maximum": 60, "default": 14,
+                    "description": "Also include overdue homework due up to this many days ago.",
+                },
+                "include_done": {
+                    "type": "boolean", "default": False,
+                    "description": "Include Untis homework already marked as done.",
+                },
+            },
+        },
     ),
 ]
 
@@ -493,6 +522,13 @@ def build_server() -> tuple[Server, MoodleDocs]:
                     return [TextContent(type="text", text="Error: function is required.")]
                 return _wrap(await tool_call_ws_function(
                     docs, fn, arguments.get("args") or {},
+                ))
+            if name == "get_homework":
+                return _wrap(await tool_get_homework(
+                    docs,
+                    days_ahead=int(arguments.get("days_ahead", 14)),
+                    days_back=int(arguments.get("days_back", 14)),
+                    include_done=bool(arguments.get("include_done", False)),
                 ))
             raise ValueError(f"Unknown tool: {name}")
         except Exception as e:

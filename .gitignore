@@ -11,3 +11,4 @@ build/
 .DS_Store
 .coverage
 htmlcov/
+uv.lock

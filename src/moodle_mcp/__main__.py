@@ -4,9 +4,12 @@ Modes:
   (default)        run the stdio MCP server, ready for Claude/Cursor/Continue.
   --check          run a sitemap + sample-page fetch, print diagnostics, exit.
   --clear-cache    delete the on-disk cache (~/.cache/moodle-mcp) and exit.
+  --homework       print open homework from Moodle + WebUntis and exit.
 
 Environment:
   MOODLE_URL, MOODLE_TOKEN        — enable Moodle Web Services tools
+  UNTIS_SERVER, UNTIS_SCHOOL, UNTIS_USER, UNTIS_SECRET — enable WebUntis homework
+  HOMEWORK_TZ                     — timezone for homework due dates (default Europe/Berlin)
   MOODLE_DOCS_ALGOLIA_APP_ID/_API_KEY/_INDEX — Algolia DocSearch fast-path
   MOODLE_MCP_PAGE_TTL             — page cache TTL in seconds (default 86400)
   MOODLE_MCP_SITEMAP_TTL          — sitemap cache TTL (default 86400)
@@ -17,6 +20,7 @@ Examples:
   moodle-mcp --version
   MOODLE_MCP_PAGE_TTL=3600 moodle-mcp
   moodle-mcp --check --log-level DEBUG
+  moodle-mcp --homework
 """
 from __future__ import annotations
 
@@ -48,6 +52,11 @@ def _build_parser() -> argparse.ArgumentParser:
         "--clear-cache",
         action="store_true",
         help="Delete the on-disk cache and exit.",
+    )
+    p.add_argument(
+        "--homework",
+        action="store_true",
+        help="Print open homework from Moodle and WebUntis, then exit.",
     )
     p.add_argument(
         "--log-level",
@@ -96,6 +105,14 @@ async def _diagnose() -> int:
         return 0
 
 
+async def _homework() -> int:
+    from .tools import tool_get_homework
+    async with MoodleDocs() as docs:
+        result = await tool_get_homework(docs)
+    print(result["markdown"])
+    return 0 if result["data"]["sources"] else 1
+
+
 def _clear_cache() -> int:
     cache = DiskCache()
     cache.clear()
@@ -114,6 +131,8 @@ def main() -> None:
         sys.exit(_clear_cache())
     if args.check:
         sys.exit(asyncio.run(_diagnose()))
+    if args.homework:
+        sys.exit(asyncio.run(_homework()))
     with contextlib.suppress(KeyboardInterrupt):
         asyncio.run(run())
 

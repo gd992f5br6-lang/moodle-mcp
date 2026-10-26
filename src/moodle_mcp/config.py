@@ -50,6 +50,16 @@ MOODLE_WS_ALLOW_INSECURE = os.environ.get("MOODLE_WS_ALLOW_INSECURE", "").lower(
     "1", "true", "yes",
 }
 
+# WebUntis homework lookups — opt-in via env. UNTIS_SECRET is the key behind
+# the Untis Mobile QR code (WebUntis → Profil → Freigaben).
+UNTIS_SERVER = os.environ.get("UNTIS_SERVER", "")
+UNTIS_SCHOOL = os.environ.get("UNTIS_SCHOOL", "")
+UNTIS_USER = os.environ.get("UNTIS_USER", "")
+UNTIS_SECRET = os.environ.get("UNTIS_SECRET", "")
+
+# Timezone used to turn deadlines into local dates/times for get_homework.
+HOMEWORK_TZ = os.environ.get("HOMEWORK_TZ", "Europe/Berlin")
+
 # Algolia DocSearch fast-path (optional). Falls back to sitemap BM25 if unset.
 ALGOLIA_APP_ID = os.environ.get("MOODLE_DOCS_ALGOLIA_APP_ID", "")
 ALGOLIA_API_KEY = os.environ.get("MOODLE_DOCS_ALGOLIA_API_KEY", "")

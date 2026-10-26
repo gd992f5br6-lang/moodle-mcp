@@ -12,7 +12,7 @@ from urllib.parse import urlparse, urlunparse
 
 import httpx
 
-from . import ws
+from . import homework, ws
 from .config import BASE_URL, MAX_QUERY_LEN, RELEASES_URL, TRACKER_SEARCH
 from .docs import (
     DocHit,
@@ -433,6 +433,21 @@ def _summarize_ws_payload(payload: Any) -> str:
     return f"Scalar: `{payload}`"
 
 
+# ---- get_homework (Moodle timeline + WebUntis class book) ----
+
+async def tool_get_homework(
+    docs: MoodleDocs, days_ahead: int = 14, days_back: int = 14, include_done: bool = False,
+) -> dict[str, Any]:
+    assert docs._client is not None
+    result = await homework.collect(
+        docs._client,
+        days_ahead=max(1, min(days_ahead, 60)),
+        days_back=max(0, min(days_back, 60)),
+        include_done=include_done,
+    )
+    return {"markdown": homework.to_markdown(result), "data": result}
+
+
 __all__ = [
     "DocHit",
     "tool_search_docs",
@@ -445,4 +460,5 @@ __all__ = [
     "tool_search_tracker",
     "tool_list_ws_functions",
     "tool_call_ws_function",
+    "tool_get_homework",
 ]
